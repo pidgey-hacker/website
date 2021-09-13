@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!--data for browser-->
+    <title>Connect to wifi from the console</title>
+    <meta name="author" content="Hato chan">
+    <!--mobile friendly-->
+    <meta charset="utf-8">
+    <!-- search engine information-->
+    <meta name="title" content="Connect to wifi from the console">
+    <meta name="description" content="">
+    <!--CSS-->
+    <link type="text/css" rel="stylesheet" href="../../CSS/style.css" />
+</head>
+
+<style>
+    h3 {
+    		font-size: 1.2em;
+    	}
+</style>
+
+<body>
+    <h1 style="text-align: center;">Connect To Wifi From The Linux Command Line</h1>
+    <h2>Objective</h2>
+    <p>Configure and Connect to WiFi only using command line utilities.</p>
+    <h2>Requirements</h2>
+    <ul>
+        <li>[Root access] or [access to sudo]</li>
+        <li>wpa_supplicant,net-tools and dhclient(or DHCPCD) aldready installed on your computer.</li>
+        <li>wifi support on your laptop/pc</li>
+    </ul>
+
+    <h2>additonal info</h2>
+    <ul>
+        <li> This guide will also go through some common problems while connecting to a WiFi. Look <a href="#help">Here</a> if you face any issues</li>
+        <li>dhclient or DHCPCD are not required if you don't want to connect to the internet or if you want to assign the ip adress manually</li>
+        <li>wifi is not necessary since you can configure the software and connect later</li>
+        <li>you can also look up more resources and documents about the software used in this article from the <a href="#sources">sources</a> listed below</li>
+    </ul>
+
+    <h2>Conventions</h2>
+    <ul>
+        <li># - requires given linux commands to be executed with root privileges either directly as a root user or by the use of sudo command</li>
+        <li>$ - given linux commands *can* be executed as a regular non-privileged user</li>
+    </ul>
+
+    <hr>
+
+    <h3>1.Finding your wifi card name</h3>
+    <p>First, you need to find the name of your physical wifi card. You can do that by typing <b>"$ ip link"</b>, this will list out the connected network devices</p>
+    <p>in my case it's called "wlp0s20f3" because "lo" is loopback which is just an important placeholder card and eno1 is my ethernet port
+        <br> and in your case, your wifi card probably starts with "w" as well, so just make sure which one is your wifi card.
+        <br> (If for some reason you can't find your wifi card, try checking out the troubleshooting part before you continue)</p>
+
+    <h3>2.Turning on your wifi card</h3>
+    <p>Now, you have to see if your wifi card is turned on by linux
+        <br> You can check that by typing <b>"$ ifconfig"</b> which will show your current active network devices.</p>
+    <p>If your card doesnt appear here, it means it is turned off.
+        <br> To turn it on just type <b>"# ifconfig [your wifi card name] up"</b>. you can check again by typing <b>"$ ifconfig"</b>.</p>
+    <p>Now that the wifi card is turned on and ready to use. All you need to do now is just connect it to your wifi.</p>
+
+    <h3>3.Configuring wpa_supplicant</h3>
+    <p>Now, you have to configure wpa_supplicant(the main program used to connect you to wifi).
+        <br> First you need to make the configuration file, you can do that by touching it <b>"# touch /etc/wpa_supplicant/wpa_supplicant-wlp0s20f3.conf"</b>
+        <br> you can replace wlp0s20f3 with your wifi card name.
+        <br> now just edit the configuration file using a text editor like nano or vim(any text editor will do) <b>"# nano /etc/wpa_supplicant/wpa_supplicant-wlp0s20f3.conf"</b>
+        <br> and add these two lines (all are small letters)
+        <br> <b>ctrl_interface=/run/wpa_supplicant</b>
+        <br> <b>update_config=1</b>
+    </p>
+
+    <h3>4.Adding your wifi credentials</h3>
+    <p>To add your wifi name and password, just <b># wpa_passphrase wourwifiname yourwifipassword >> /etc/wpa_supplicant/wpa_supplicant-wlp0s20f3.conf</b>
+        <br> if your wifi name has spaces in it, put them inside ""</p>
+    <p>you can check if the changes were made by editing the configuration file again.
+        <br>If you made a mistake then delete the newly added lines and run the command again</p>
+
+    <h3>5.Connecting to the wifi! Finally</h3>
+    <p>you can connect to the wifi by running,
+        <br><b># wpa_supplicant -i [your wifi card name] -c /etc/wpa_supplicant/wpa_supplicant-wlp6s0.conf</b></p>
+    <p>Now, you should be connected to the wifi!
+        <br>also, you can use options like -B to make it run in the background
+        <br>and option -qq to make it look more neat.
+        <br>For more options read the man page of wpa_supplicant ($ man wpa_supplicant)
+    </p>
+
+    <h3>6.Connecting to the internet.</h3>
+    <p>Just type
+        <br><b># dhclient [your wifi card name]</b>
+        <br>note: you can use DHCPCD instead of dhclient
+    </p>
+</body>
+<hr>
+<h3 style="padding-top: 0em;" id="sources">Sources:</h3>
+<ul>
+    <li><a href="https://youtu.be/QGyHDIYlLFA">4-eyed-cat man's tutorial</a></li>
+    <li><a href="https://linux.die.net/man/8/wpa_supplicant">wpa_supplicant manual</a></li>
+</ul>
+<hr>
+<h3 style="padding-top: 0em;" id="help">Troubleshooting</h3>
+<p style="padding-bottom: 0.4em;">ERROR: operation not permited, FIX: run it as root</p>
+<p style="padding-bottom: 0.4em;">ERROR: permission denied, FIX: run it as root</p>
+<p style="padding-bottom: 0.4em;">ERROR: wlan softblocked, FIX: try "# rfkill unblock wlan"</p>
+<p style="padding-bottom: 0em;">PROBLEM: Couldn't find my wifi card</p>
+<p>SOLUTION: <br>You may not have the drivers installed on your system,<br> In arch and arch based linux distributions try downloading linux-firmware (# pacman -S linux-firmware).<br> In Debian/Ubuntu based distro's try downloading the firmware-iwlwifi and firmware-realtek package(might need to add some repo's) <br>or try downloading the <a href="https://www.intel.com/content/www/us/en/support/articles/000005511/wireless.html">intel wifi drivers for linux</a> and extracting the .ucode to /lib/firmware.<br> In gentoo or any other linux distribution, try extracting the wifi drivers to /lib/firmware or <a href="https://wiki.gentoo.org/wiki/Iwlwifi">compile the firmware into your kernel</a><br> In any case, a Reboot is highly recommended</p>
+<hr>
+<p style="text-align: center;"><a href="../../index.html ">Home</a></p>
+</html>
