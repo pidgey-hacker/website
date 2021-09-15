@@ -91,6 +91,13 @@ li {
     border-radius: 20px;
 }
 
+.code {
+    position: relative;
+    width: max-content;
+    background-color: #CABD9A;
+    color: black;
+}
+
 footer {
    position: absolute;
    bottom: 0;
